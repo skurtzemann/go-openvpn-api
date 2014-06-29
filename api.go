@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-martini/martini"
+	"github.com/martini-contrib/cors"
 	"github.com/martini-contrib/render"
 	"github.com/skurtzemann/go-openvpn-api/vpn"
 	"io/ioutil"
@@ -55,6 +56,14 @@ func main() {
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{
 		IndentJSON: true,
+	}))
+
+	m.Use(cors.Allow(&cors.Options{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
 	}))
 
 	// The default page return the name and the version of the api
