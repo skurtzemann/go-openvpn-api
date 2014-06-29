@@ -60,7 +60,7 @@ func (user *VpnUser) parseLine(line string) (err error) {
 			return nil
 		}
 	} else {
-		if fields[0] == "ifconfig-push" {
+		if fields[0] == "ifconfig-push" && len(fields) == 3 {
 			user.setIpAddress(fields[1])
 			user.setNetMask(fields[2])
 			return nil
