@@ -29,6 +29,25 @@ func listConfigDir(directory string) (users []string, err error) {
 	return users, nil
 }
 
+// Extents 'listConfigDir' function with full users informations
+func listConfigDirAndConfig(directory string) (users []vpn.VpnUser, err error) {
+	files, err := ioutil.ReadDir(directory)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if !file.IsDir() {
+			user := vpn.VpnUser{file.Name(), true, "", ""}
+			err := user.ParseConfigFile(directory + "/" + file.Name())
+			if err == nil {
+				users = append(users, user)
+			}
+		}
+	}
+	return users, nil
+}
+
 func main() {
 	// openvpn client config dir (ccd)
 	ccdDir := "./ccd"
@@ -51,6 +70,19 @@ func main() {
 	// Get all users
 	m.Get("/users", func(r render.Render) {
 		users, err := listConfigDir(ccdDir)
+
+		if err != nil {
+			r.JSON(404, map[string]string{
+				"error": "OpenVPN client configuration directory not found",
+			})
+		} else {
+			r.JSON(200, users)
+		}
+	})
+
+	// Get all users with the full details of them
+	m.Get("/users/_full", func(r render.Render) {
+		users, err := listConfigDirAndConfig(ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
