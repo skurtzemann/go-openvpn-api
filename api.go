@@ -15,6 +15,7 @@ const (
 	ApiVersion = "1.0.0"
 )
 
+// General function which walk into the config directory and process the given callback
 func EachConfig(directory string, callback func(os.FileInfo) bool) (err error) {
 	if files, err := ioutil.ReadDir(directory); err == nil {
 		for _, file := range files {
@@ -25,20 +26,19 @@ func EachConfig(directory string, callback func(os.FileInfo) bool) (err error) {
 			}
 		}
 	}
-
 	return err
 }
 
-// ListConfigDir returns a list of files in the OpenVPN client config dir
+// Returns a list of files into the OpenVPN client config dir
 func ListConfigNames(directory string) (users []string, err error) {
 	err = EachConfig(directory, func(file os.FileInfo) bool {
 		users = append(users, file.Name())
 		return true
 	})
-
 	return
 }
 
+// Returns a list of the all users informations
 func ListConfigs(directory string) (users []vpn.VpnUser, err error) {
 	err = EachConfig(directory, func(file os.FileInfo) bool {
 		user := vpn.VpnUser{file.Name(), true, "", ""}
