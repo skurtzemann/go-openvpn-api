@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/cors"
 	"github.com/martini-contrib/render"
@@ -50,8 +51,9 @@ func ListConfigs(directory string) (users []vpn.VpnUser, err error) {
 }
 
 func main() {
-	// openvpn client config dir (ccd)
-	ccdDir := "./ccd"
+	// params
+	ccdDir := flag.String("ccddir", "./ccd", "openvpn's client config dir")
+	flag.Parse()
 
 	m := martini.Classic()
 	m.Use(render.Renderer(render.Options{
@@ -78,7 +80,7 @@ func main() {
 
 	// Get all users
 	m.Get("/users", func(r render.Render) {
-		users, err := ListConfigNames(ccdDir)
+		users, err := listConfigDir(*ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
@@ -91,7 +93,7 @@ func main() {
 
 	// Get all users with the full details of them
 	m.Get("/users/_full", func(r render.Render) {
-		users, err := ListConfigs(ccdDir)
+		users, err := listConfigDirAndConfig(*ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
@@ -104,7 +106,7 @@ func main() {
 
 	// Get the configuration of the given user
 	m.Get("/users/:user", func(r render.Render, params martini.Params) {
-		userConfigFile := ccdDir + "/" + params["user"]
+		userConfigFile := *ccdDir + "/" + params["user"]
 
 		user := vpn.VpnUser{params["user"], true, "", ""}
 		err := user.ParseConfigFile(userConfigFile)
