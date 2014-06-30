@@ -80,7 +80,7 @@ func main() {
 
 	// Get all users
 	m.Get("/v1/users", func(r render.Render) {
-		users, err := listConfigDir(*ccdDir)
+		users, err := ListConfigNames(*ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
@@ -93,7 +93,7 @@ func main() {
 
 	// Get all users with the full details of them
 	m.Get("/v1/users/_full", func(r render.Render) {
-		users, err := listConfigDirAndConfig(*ccdDir)
+		users, err := ListConfigs(*ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
