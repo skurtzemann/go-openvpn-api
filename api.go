@@ -6,6 +6,7 @@ import (
 	"github.com/martini-contrib/render"
 	"github.com/skurtzemann/go-openvpn-api/vpn"
 	"io/ioutil"
+	"os"
 )
 
 const (
@@ -13,40 +14,39 @@ const (
 	ApiVersion = "1.0.0"
 )
 
-// List the "openvpn client config dir" and return a slice of vpnUser
-// we considers that a VpnUser is only a file not a directory
-func listConfigDir(directory string) (users []string, err error) {
-
-	files, err := ioutil.ReadDir(directory)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, file := range files {
-		if !file.IsDir() {
-			users = append(users, file.Name())
-		}
-	}
-	return users, nil
-}
-
-// Extents 'listConfigDir' function with full users informations
-func listConfigDirAndConfig(directory string) (users []vpn.VpnUser, err error) {
-	files, err := ioutil.ReadDir(directory)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, file := range files {
-		if !file.IsDir() {
-			user := vpn.VpnUser{file.Name(), true, "", ""}
-			err := user.ParseConfigFile(directory + "/" + file.Name())
-			if err == nil {
-				users = append(users, user)
+func EachConfig(directory string, callback func(os.FileInfo) bool) (err error) {
+	if files, err := ioutil.ReadDir(directory); err == nil {
+		for _, file := range files {
+			if !file.IsDir() {
+				if !callback(file) {
+					break
+				}
 			}
 		}
 	}
-	return users, nil
+
+	return err
+}
+
+// ListConfigDir returns a list of files in the OpenVPN client config dir
+func ListConfigNames(directory string) (users []string, err error) {
+	err = EachConfig(directory, func(file os.FileInfo) bool {
+		users = append(users, file.Name())
+		return true
+	})
+
+	return
+}
+
+func ListConfigs(directory string) (users []vpn.VpnUser, err error) {
+	err = EachConfig(directory, func(file os.FileInfo) bool {
+		user := vpn.VpnUser{file.Name(), true, "", ""}
+		if err = user.ParseConfigFile(directory + "/" + file.Name()); nil != err {
+			users = append(users, user)
+		}
+		return nil == err
+	})
+	return
 }
 
 func main() {
@@ -78,7 +78,7 @@ func main() {
 
 	// Get all users
 	m.Get("/users", func(r render.Render) {
-		users, err := listConfigDir(ccdDir)
+		users, err := ListConfigNames(ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
@@ -91,7 +91,7 @@ func main() {
 
 	// Get all users with the full details of them
 	m.Get("/users/_full", func(r render.Render) {
-		users, err := listConfigDirAndConfig(ccdDir)
+		users, err := ListConfigs(ccdDir)
 
 		if err != nil {
 			r.JSON(404, map[string]string{
