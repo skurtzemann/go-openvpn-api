@@ -79,7 +79,7 @@ func main() {
 	})
 
 	// Get all users
-	m.Get("/users", func(r render.Render) {
+	m.Get("/v1/users", func(r render.Render) {
 		users, err := listConfigDir(*ccdDir)
 
 		if err != nil {
@@ -92,7 +92,7 @@ func main() {
 	})
 
 	// Get all users with the full details of them
-	m.Get("/users/_full", func(r render.Render) {
+	m.Get("/v1/users/_full", func(r render.Render) {
 		users, err := listConfigDirAndConfig(*ccdDir)
 
 		if err != nil {
@@ -105,7 +105,7 @@ func main() {
 	})
 
 	// Get the configuration of the given user
-	m.Get("/users/:user", func(r render.Render, params martini.Params) {
+	m.Get("/v1/users/:user", func(r render.Render, params martini.Params) {
 		userConfigFile := *ccdDir + "/" + params["user"]
 
 		user := vpn.VpnUser{params["user"], true, "", ""}
