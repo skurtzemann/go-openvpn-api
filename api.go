@@ -42,7 +42,7 @@ func ListConfigNames(directory string) (users []string, err error) {
 func ListConfigs(directory string) (users []vpn.VpnUser, err error) {
 	err = EachConfig(directory, func(file os.FileInfo) bool {
 		user := vpn.VpnUser{file.Name(), true, "", ""}
-		if err = user.ParseConfigFile(directory + "/" + file.Name()); nil != err {
+		if err = user.ParseConfigFile(directory + "/" + file.Name()); nil == err {
 			users = append(users, user)
 		}
 		return nil == err
